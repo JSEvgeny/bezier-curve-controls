@@ -9,6 +9,7 @@ public class DrawTouch : MonoBehaviour
     [SerializeField] GameObject pointPrefab;
     [SerializeField] float minDistance = 0.1f;
     [SerializeField] int pointsInCurve = 50;
+    [SerializeField] float controlPointOffset = 1f;
 
     BoxCollider2D boundryCollider;
     EdgeCollider2D controlPointCollider;
@@ -110,18 +111,29 @@ public class DrawTouch : MonoBehaviour
 
     private Vector2 CalculateQuadraticBezierCurvePoint(float t)
     {
+        // Start point
         Vector2 p0 = controlPoints[0];
-        Vector2 p1 = controlPoints[controlPoints.Count / 2]; //+ new Vector2(3, 0);
+        // Control point
+        Vector2 p1 = controlPoints[controlPoints.Count / 2];
+        // End point
         Vector2 p2 = controlPoints.Last();
 
-        Debug.Log("p0: " + p0);
-        Debug.Log("p1: " + p1);
-        Debug.Log("p2: " + p2);
-        Debug.Log(t);
+        Debug.Log(p0.x - p1.x > 0);
 
-        return CalculateQuadraticBezierCurvePoint(p0, p1, p2, t);
+        Vector2 controlPoint = p0.x - p1.x > 0 ? new Vector2(p1.x + controlPointOffset, p1.y) : new Vector2(p1.x - controlPointOffset, p1.y);
+
+        return CalculateQuadraticBezierCurvePoint(p0, controlPoint, p2, t);
     }
 
+    /**
+     * Calculate the point on the quadratic bezier curve
+     * 
+     * @param p0 - start point
+     * @param p1 - control point
+     * @param p2 - end point
+     * @param t - time
+     * @return Vector2 - point on the curve
+     */
     private Vector2 CalculateQuadraticBezierCurvePoint(Vector2 p0, Vector2 p1, Vector2 p2, float t)
     {
         return BezierCurve.Quadratic(p0, p1, p2, t);

@@ -217,6 +217,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Front Leg
       objectReference: {fileID: 0}
+    - target: {fileID: 3523168011098182491, guid: adc6806e85cdf080e87ef97581a935db, type: 3}
+      propertyPath: controlPointOffset
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3523168011098182493, guid: adc6806e85cdf080e87ef97581a935db, type: 3}
       propertyPath: m_RootOrder
       value: 2
