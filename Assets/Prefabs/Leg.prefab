@@ -94,6 +94,7 @@ GameObject:
   - component: {fileID: 3523168011098182490}
   - component: {fileID: 3523168011098182491}
   - component: {fileID: -2573702876845724220}
+  - component: {fileID: 1975351456234506528}
   m_Layer: 5
   m_Name: Leg
   m_TagString: Untagged
@@ -181,7 +182,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineRendererPrefab: {fileID: 6976651656302200671, guid: b9e2fb6bd13780baeb715ac34feb8a84, type: 3}
   pointPrefab: {fileID: 0}
-  nextPointThreshold: 0.01
+  minDistance: 0.1
   pointsInCurve: 50
 --- !u!61 &-2573702876845724220
 BoxCollider2D:
@@ -209,3 +210,32 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!60 &1975351456234506528
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3523168011098182488}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: -0.5353646, y: -0.17618775}
+      - {x: -0.53978527, y: -0.2490133}
+      - {x: 0.51326185, y: -0.24901327}
+      - {x: 0.51326185, y: -0.17618787}

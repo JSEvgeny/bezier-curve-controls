@@ -7,10 +7,12 @@ public class DrawTouch : MonoBehaviour
 {
     [SerializeField] GameObject lineRendererPrefab;
     [SerializeField] GameObject pointPrefab;
-    [SerializeField] float nextPointThreshold = 0.1f;
+    [SerializeField] float minDistance = 0.1f;
     [SerializeField] int pointsInCurve = 50;
 
     BoxCollider2D boundryCollider;
+    EdgeCollider2D controlPointCollider;
+    EdgeCollider2D lineCollider;
 
     LineRenderer lineRenderer;
     LineRenderer curveRenderer;
@@ -19,15 +21,21 @@ public class DrawTouch : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        lineRenderer = Instantiate(lineRendererPrefab, transform.position, transform.rotation).GetComponent<LineRenderer>();
-        curveRenderer = Instantiate(lineRendererPrefab, transform.position, transform.rotation).GetComponent<LineRenderer>();
+        GameObject renderObjectLine = Instantiate(lineRendererPrefab, Vector3.zero, Quaternion.identity);
+        GameObject renderObjectCurve = Instantiate(lineRendererPrefab, Vector3.zero, Quaternion.identity);
+
+        lineRenderer = renderObjectLine.GetComponent<LineRenderer>();
+        curveRenderer = renderObjectCurve.GetComponent<LineRenderer>();
+
         boundryCollider = GetComponent<BoxCollider2D>();
+        controlPointCollider = GetComponent<EdgeCollider2D>();
+        lineCollider = renderObjectLine.GetComponent<EdgeCollider2D>();
     }
 
     void OnMouseDown()
     {
+        ResetControlPoints();
         SetStartingPoint();
-        RenderBezierCurve();
     }
 
     void OnMouseDrag()
@@ -38,48 +46,52 @@ public class DrawTouch : MonoBehaviour
 
         if (isMovedEnough)
         {
-            // Remove line if dragging outside of object collider
+            // // Remove line if dragging outside of object collider
             bool isMovedOutside = isMovedOutsideBounry(mousePosition);
 
             if (isMovedOutside)
             {
-                RenderBezierCurve();
                 RemoveLine();
+                RemoveCurve();
                 return;
             }
+
             UpdateVectorLine(mousePosition);
         }
-    }
 
-    private bool isMovedOutsideBounry(Vector2 mousePosition)
-    {
-        return !boundryCollider.bounds.Contains(mousePosition);
-    }
+        Debug.Log(controlPoints.Count);
 
-    private bool isMovedFarEnough(Vector2 mousePosition)
-    {
-        return Vector2.Distance(mousePosition, controlPoints[controlPoints.Count - 1]) > nextPointThreshold;
+        if (controlPoints.Count > 1)
+        {
+            RenderBezierCurve();
+        }
     }
 
     void OnMouseUp()
     {
-        RenderBezierCurve();
         RemoveLine();
+        RemoveCurve();
         ResetControlPoints();
     }
 
-    void UpdateLine(Vector2 newFingerPosition)
+    void OnTriggerEnter2D(Collider2D other)
     {
-        // Save finger position
-        controlPoints.Add(newFingerPosition);
-        lineRenderer.positionCount += 1;
-        lineRenderer.SetPosition(lineRenderer.positionCount - 1, newFingerPosition);
+        Debug.Log("Collision");
+
+        Vector2 p1 = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        AddControlPoint(p1);
     }
 
     void RemoveLine()
     {
         // Remove line
         lineRenderer.positionCount = 0;
+    }
+
+    void RemoveCurve()
+    {
+        // Remove curve
+        curveRenderer.positionCount = 0;
     }
 
     void RenderBezierCurve()
@@ -91,6 +103,7 @@ public class DrawTouch : MonoBehaviour
         {
             float t = i / (float)pointsInCurve;
             Vector2 point = CalculateQuadraticBezierCurvePoint(t);
+            curveRenderer.material.SetColor("_Color", Color.red);
             curveRenderer.SetPosition(i, point);
         }
     }
@@ -98,8 +111,13 @@ public class DrawTouch : MonoBehaviour
     private Vector2 CalculateQuadraticBezierCurvePoint(float t)
     {
         Vector2 p0 = controlPoints[0];
-        Vector2 p1 = controlPoints[controlPoints.Count / 2];
+        Vector2 p1 = controlPoints[controlPoints.Count / 2]; //+ new Vector2(3, 0);
         Vector2 p2 = controlPoints.Last();
+
+        Debug.Log("p0: " + p0);
+        Debug.Log("p1: " + p1);
+        Debug.Log("p2: " + p2);
+        Debug.Log(t);
 
         return CalculateQuadraticBezierCurvePoint(p0, p1, p2, t);
     }
@@ -129,7 +147,13 @@ public class DrawTouch : MonoBehaviour
         AddControlPoint(p0);
 
         lineRenderer.positionCount = 2;
+
+        // Setting both positions to the same point (would point from center otherwise)
         lineRenderer.SetPosition(0, p0);
+        lineRenderer.SetPosition(1, p0);
+
+        // Set collider to point
+        lineCollider.points = controlPoints.ToArray();
     }
 
     void UpdateVectorLine(Vector2 mousePosition)
@@ -137,5 +161,24 @@ public class DrawTouch : MonoBehaviour
         Vector2 p0 = controlPoints[0];
         lineRenderer.positionCount = controlPoints.Count + 1;
         lineRenderer.SetPosition(lineRenderer.positionCount - 1, mousePosition);
+
+        // Set last control point
+        if (controlPoints.Count > 1)
+        {
+            controlPoints[controlPoints.Count - 1] = mousePosition;
+        }
+
+        // Set edge collider points
+        lineCollider.points = controlPoints.Concat(new List<Vector2> { mousePosition }).ToArray();
+    }
+
+    private bool isMovedOutsideBounry(Vector2 mousePosition)
+    {
+        return !boundryCollider.bounds.Contains(mousePosition);
+    }
+
+    private bool isMovedFarEnough(Vector2 mousePosition)
+    {
+        return Vector2.Distance(mousePosition, controlPoints[controlPoints.Count - 1]) > minDistance;
     }
 }
