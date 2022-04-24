@@ -48,14 +48,14 @@ public class DrawTouch : MonoBehaviour
         if (isMovedEnough)
         {
             // // Remove line if dragging outside of object collider
-            bool isMovedOutside = isMovedOutsideBounry(mousePosition);
+            // bool isMovedOutside = isMovedOutsideBounry(mousePosition);
 
-            if (isMovedOutside)
-            {
-                RemoveLine();
-                RemoveCurve();
-                return;
-            }
+            // if (isMovedOutside)
+            // {
+            //     RemoveLine();
+            //     RemoveCurve();
+            //     return;
+            // }
 
             UpdateVectorLine(mousePosition);
         }

@@ -184,6 +184,7 @@ MonoBehaviour:
   pointPrefab: {fileID: 0}
   minDistance: 0.1
   pointsInCurve: 50
+  controlPointOffset: 1
 --- !u!61 &-2573702876845724220
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -236,6 +237,6 @@ PolygonCollider2D:
   m_Points:
     m_Paths:
     - - {x: -0.5353646, y: -0.17618775}
-      - {x: -0.53978527, y: -0.2490133}
-      - {x: 0.51326185, y: -0.24901327}
+      - {x: -0.5351881, y: -0.18452668}
+      - {x: 0.51270705, y: -0.18452665}
       - {x: 0.51326185, y: -0.17618787}
