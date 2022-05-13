@@ -19,6 +19,9 @@ public class DrawTouch : MonoBehaviour
     LineRenderer curveRenderer;
     List<Vector2> controlPoints = new List<Vector2>();
 
+    bool hasControlPoint = false;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -73,6 +76,7 @@ public class DrawTouch : MonoBehaviour
         RemoveLine();
         RemoveCurve();
         ResetControlPoints();
+        hasControlPoint = false;
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -80,7 +84,11 @@ public class DrawTouch : MonoBehaviour
         Debug.Log("Collision");
 
         Vector2 p1 = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        AddControlPoint(p1);
+
+        if (!hasControlPoint) {
+            AddControlPoint(p1);
+            hasControlPoint = true;
+        }
     }
 
     void RemoveLine()
