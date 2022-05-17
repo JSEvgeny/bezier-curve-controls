@@ -10,10 +10,9 @@ public class DrawTouch : MonoBehaviour
     [SerializeField] float minDistance = 0.1f;
     [SerializeField] int pointsInCurve = 50;
     [SerializeField] bool debug;
+    [SerializeField] ImpactType impactType = ImpactType.Pop;
 
     BoxCollider2D boundryCollider;
-    EdgeCollider2D controlPointCollider;
-    EdgeCollider2D lineCollider;
 
     LineRenderer lineRenderer;
     LineRenderer curveRenderer;
@@ -31,8 +30,6 @@ public class DrawTouch : MonoBehaviour
         GameObject renderObjectCurve = InitializeLineRenderer(curveRendererPrefab, ref curveRenderer, 0.03f);
 
         boundryCollider = GetComponent<BoxCollider2D>();
-        controlPointCollider = GetComponent<EdgeCollider2D>();
-        lineCollider = renderObjectLine.GetComponent<EdgeCollider2D>();
     }
 
     void OnMouseDown()
@@ -40,6 +37,19 @@ public class DrawTouch : MonoBehaviour
         ResetControlPoints();
         SetStartingPoint();
     }
+
+/*     void FixedUpdate() {
+        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        // Cast a ray straight down.
+        RaycastHit2D hit = Physics2D.Raycast(controlPoints[0], mousePosition - controlPoints[0]);
+
+        // If it hits something...
+        if (hit.collider != null)
+        {
+            Debug.Log("Hit: " + hit.collider.name);
+        }
+    } */
 
     void OnMouseDrag()
     {
@@ -179,9 +189,18 @@ public class DrawTouch : MonoBehaviour
         // Setting both positions to the same point (would point from center otherwise)
         lineRenderer.SetPosition(0, p0);
         lineRenderer.SetPosition(1, p0);
+    }
 
-        // Set collider to point
-        lineCollider.points = controlPoints.ToArray();
+    string[] CheckRaycastHit(Vector2 mousePosition) {
+
+        Vector2 startPoint = controlPoints[0];
+        Vector2 direction = mousePosition - startPoint;
+
+        // Cast a ray straight down.
+        RaycastHit2D[] hits = Physics2D.RaycastAll(startPoint, direction, direction.magnitude);
+        Debug.DrawRay(startPoint, direction);
+
+        return hits.Select(hit => hit.collider.name).ToArray();
     }
 
     void UpdateVectorLine(Vector2 mousePosition)
@@ -189,7 +208,18 @@ public class DrawTouch : MonoBehaviour
         lineRenderer.positionCount = controlPoints.Count + 1;
         lineRenderer.SetPosition(lineRenderer.positionCount - 1, mousePosition);
 
-        Debug.Log("Controll POINTS COUNT: " + controlPoints.Count);
+        Debug.Log("Control POINTS COUNT: " + controlPoints.Count);
+
+        string[] hitNames = CheckRaycastHit(mousePosition);
+
+        if (impactType == ImpactType.Pop && hitNames.Any(name => name == "Pop Collider"))
+        {
+            if (!hasControlPoint)
+            {
+                AddControlPoint(mousePosition);
+                hasControlPoint = true;
+            }
+        }
 
         // Set last control point
         if (controlPoints.Count == 2)
@@ -203,9 +233,6 @@ public class DrawTouch : MonoBehaviour
             controlPoints[2] = mousePosition;
             UpdateMiddleControlPoint();
         }
-
-        // Set edge collider points
-        lineCollider.points = controlPoints.Concat(new List<Vector2> { mousePosition }).ToArray();
     }
 
     void UpdateMiddleControlPoint()
