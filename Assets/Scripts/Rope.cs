@@ -53,11 +53,11 @@ public class Rope : MonoBehaviour
         // Constraints
         for(int i = 0; i < constaintsToApply; i++)
         {
-            ApplyConstraints();
+            ApplyConstraint();
         }
     }
 
-    void ApplyConstraints()
+    void ApplyConstraint()
     {
         RopeSegment firstSegment = segments[0];
         firstSegment.currentPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -84,7 +84,7 @@ public class Rope : MonoBehaviour
             Vector2 changeAmount = changeDir * error;
             if (i != 0)
             {
-                firstSeg.currentPosition -= changeAmount * error;
+                firstSeg.currentPosition -= changeAmount * 0.5f;
                 segments[i] = firstSeg;
                 nextSeg.currentPosition += changeAmount * 0.5f;
                 segments[i + 1] = nextSeg;
@@ -92,7 +92,6 @@ public class Rope : MonoBehaviour
                 nextSeg.currentPosition += changeAmount;
                 segments[i + 1] = nextSeg;
             }
-
         }
     }
 
