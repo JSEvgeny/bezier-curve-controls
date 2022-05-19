@@ -99,14 +99,14 @@ public class DrawTouch : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-/*         Debug.Log("Collision");
+        Debug.Log("Collision");
 
         Vector2 p1 = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
         if (!hasControlPoint) {
             AddControlPoint(p1);
             hasControlPoint = true;
-        } */
+        }
     }
 
     LineRenderer InitializeLineRenderer(GameObject renderPrefab, float lineWidth)
@@ -157,12 +157,10 @@ public class DrawTouch : MonoBehaviour
         // Draw curve
         curveRenderer.positionCount = pointsInCurve;
 
-        for (int i = 0; i <= pointsInCurve; i++)
-        {
-            float t = i / (float)pointsInCurve;
-            Vector2 point = CalculateQuadraticBezierCurvePoint(t);
-            curveRenderer.SetPosition(i, point);
-        }
+        Vector3[] curvePoints = new Vector3[pointsInCurve];
+        curvePoints = curvePoints.Select((_, index) => (Vector3)CalculateQuadraticBezierCurvePoint(index / (float)pointsInCurve)).ToArray();
+
+        curveRenderer.SetPositions(curvePoints);
     }
 
     private Vector2 CalculateQuadraticBezierCurvePoint(float t)
@@ -225,6 +223,7 @@ public class DrawTouch : MonoBehaviour
         // Cast a ray straight down.
         RaycastHit2D[] hits = Physics2D.RaycastAll(startPoint, direction, direction.magnitude);
         Debug.DrawRay(startPoint, direction);
+        Debug.Log(hits.Select(hit => hit.collider.name).ToArray());
 
         return hits.Select(hit => hit.collider.name).ToArray();
     }
@@ -264,11 +263,6 @@ public class DrawTouch : MonoBehaviour
 
     void UpdateMiddleControlPoint(Vector2 mousePosition)
     {
-         RaycastHit hit;
-         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-         if(Physics.Raycast(ray, hit)){
-             Debug.Log('Hit point: ' + hit.point);
-         }
         // Assuming we always have 3 control points
         // Middle point
         Vector2 p1 = controlPoints[1];
