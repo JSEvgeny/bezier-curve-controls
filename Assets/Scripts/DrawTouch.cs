@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,24 +13,32 @@ public class DrawTouch : MonoBehaviour
     [SerializeField] bool debug;
     [SerializeField] ImpactType impactType = ImpactType.Pop;
 
-    BoxCollider2D boundryCollider;
+    // Joints: connected objects
+    [SerializeField] GameObject jointPointPrefab;
+    [SerializeField] GameObject tensionPointPrefab;
+    [SerializeField] float jointMaxVerticalDistance = 5f;
+    [SerializeField] Vector2 jointPoision = new Vector2(0, 0);
 
+    [ReadOnlyInspector] [SerializeField] List<Vector2> controlPoints = new List<Vector2>(3);
+    [ReadOnlyInspector] [SerializeField] bool hasControlPoint = false;
+
+    BoxCollider2D boundryCollider;
     LineRenderer lineRenderer;
     LineRenderer curveRenderer;
-    [ReadOnlyInspector] [SerializeField] List<Vector2> controlPoints = new List<Vector2>(3);
-
-    [ReadOnlyInspector] [SerializeField] bool hasControlPoint = false;
+    SpringJoint2D springJoint;
 
 
     // Start is called before the first frame update
     void Start()
     {
         // Initilize line renderer
-        GameObject renderObjectLine = InitializeLineRenderer(lineRendererPrefab, ref lineRenderer, 0.05f);
+        lineRenderer = InitializeLineRenderer(lineRendererPrefab, 0.05f);
         // Initilize curve renderer
-        GameObject renderObjectCurve = InitializeLineRenderer(curveRendererPrefab, ref curveRenderer, 0.03f);
+        curveRenderer = InitializeLineRenderer(curveRendererPrefab, 0.03f);
 
         boundryCollider = GetComponent<BoxCollider2D>();
+
+        springJoint = InitializeJoint(jointPointPrefab, tensionPointPrefab, jointPoision);
     }
 
     void OnMouseDown()
@@ -90,28 +99,45 @@ public class DrawTouch : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("Collision");
+/*         Debug.Log("Collision");
 
         Vector2 p1 = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
         if (!hasControlPoint) {
             AddControlPoint(p1);
             hasControlPoint = true;
-        }
+        } */
     }
 
-    private GameObject InitializeLineRenderer(GameObject renderPrefab, ref LineRenderer renderer, float lineWidth)
+    LineRenderer InitializeLineRenderer(GameObject renderPrefab, float lineWidth)
     {
         // Spawn and define line renderer
         GameObject obj = Instantiate(renderPrefab, Vector3.zero, Quaternion.identity);
-        renderer = obj.GetComponent<LineRenderer>();
+        obj.transform.SetParent(transform);
+        LineRenderer renderer = obj.GetComponent<LineRenderer>();
         // Set line renderer properties
         renderer.startWidth = lineWidth;
         renderer.endWidth = lineWidth;
         // Set visibility
         renderer.enabled = debug;
 
-        return obj;
+        return renderer;
+    }
+
+    SpringJoint2D InitializeJoint(GameObject jointPointPrefab, GameObject tensionPointPrefab, Vector2 position)
+    {
+        // Spawn and define joint
+        GameObject jointPoint = Instantiate(jointPointPrefab, position, Quaternion.identity);
+        SpringJoint2D springJoint = jointPoint.GetComponent<SpringJoint2D>();
+        // Set parent
+        jointPoint.transform.SetParent(transform);
+        // Set joint properties
+        GameObject tensionPoint = Instantiate(tensionPointPrefab, position, Quaternion.identity);
+        tensionPoint.transform.SetParent(transform);
+        Rigidbody2D tensionPointRb = tensionPoint.GetComponent<Rigidbody2D>();
+        springJoint.connectedBody = tensionPointRb;
+
+        return springJoint;
     }
 
     void RemoveLine()
@@ -225,29 +251,35 @@ public class DrawTouch : MonoBehaviour
         if (controlPoints.Count == 2)
         {
             AddControlPoint(mousePosition);
-            UpdateMiddleControlPoint();
         }
 
         if (controlPoints.Count > 2)
         {
             controlPoints[2] = mousePosition;
-            UpdateMiddleControlPoint();
+            springJoint.connectedBody.transform.position = controlPoints[2];
+            Debug.Log("YEBANIIII VROOOOOT " +  tensionPointPrefab.transform);
+            UpdateMiddleControlPoint(mousePosition);
         }
     }
 
-    void UpdateMiddleControlPoint()
+    void UpdateMiddleControlPoint(Vector2 mousePosition)
     {
+         RaycastHit hit;
+         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+         if(Physics.Raycast(ray, hit)){
+             Debug.Log('Hit point: ' + hit.point);
+         }
         // Assuming we always have 3 control points
         // Middle point
         Vector2 p1 = controlPoints[1];
-        // End point
-        Vector2 p2 = controlPoints.Last();
 
-        // Get opposite point of the line between p1 and p2
-        
-    
-        Debug.Log("Middle point: " + p1);
-        Debug.Log("Last point: " + p2);
+        controlPoints[1] = CalculateMiddleControlPoint(p1, mousePosition);
+        Debug.DrawLine(p1, controlPoints[1], Color.red, 10f);
+    }
+
+    private Vector2 CalculateMiddleControlPoint(Vector2 p1, Vector2 p2)
+    {
+       return p2 - p1;
     }
 
     bool isMovedOutsideBounry(Vector2 mousePosition)
