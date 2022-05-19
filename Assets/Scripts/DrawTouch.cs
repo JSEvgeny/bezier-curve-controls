@@ -19,13 +19,15 @@ public class DrawTouch : MonoBehaviour
     [SerializeField] float jointMaxVerticalDistance = 5f;
     [SerializeField] Vector2 jointPoision = new Vector2(0, 0);
 
-    [ReadOnlyInspector] [SerializeField] List<Vector2> controlPoints = new List<Vector2>(3);
+    [ReadOnlyInspector] [SerializeField] List<Vector2> controlPoints = new List<Vector2>();
     [ReadOnlyInspector] [SerializeField] bool hasControlPoint = false;
 
     BoxCollider2D boundryCollider;
     LineRenderer lineRenderer;
     LineRenderer curveRenderer;
     SpringJoint2D springJoint;
+
+    GameObject middlePoint;
 
 
     // Start is called before the first frame update
@@ -83,9 +85,12 @@ public class DrawTouch : MonoBehaviour
 
         Debug.Log(controlPoints.Count);
 
-        if (controlPoints.Count > 1)
+        bool hasAllPoints = controlPoints.Count == 3;
+
+        if (hasAllPoints)
         {
             RenderBezierCurve();
+            springJoint.connectedBody.transform.position = controlPoints[1];
         }
     }
 
@@ -95,6 +100,7 @@ public class DrawTouch : MonoBehaviour
         RemoveCurve();
         ResetControlPoints();
         hasControlPoint = false;
+        Destroy(middlePoint);
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -215,16 +221,19 @@ public class DrawTouch : MonoBehaviour
         lineRenderer.SetPosition(1, p0);
     }
 
-    string[] CheckRaycastHit(Vector2 mousePosition) {
+    bool CheckIfRaycastHitsCollider(Vector2 mousePosition, string colliderName, out RaycastHit2D[] hits) {
 
         Vector2 startPoint = controlPoints[0];
         Vector2 direction = mousePosition - startPoint;
 
         // Cast a ray straight down.
-        RaycastHit2D[] hits = Physics2D.RaycastAll(startPoint, direction, direction.magnitude);
+        hits = Physics2D.RaycastAll(startPoint, direction, direction.magnitude);
         Debug.DrawRay(startPoint, direction);
-        Debug.Log(hits.Select(hit => hit.collider.name).ToArray());
 
+        return hits.Any(hit => hit.collider.name==colliderName);
+    }
+
+    string[] GetRaycastHitCollidersNames(RaycastHit2D[] hits) {
         return hits.Select(hit => hit.collider.name).ToArray();
     }
 
@@ -235,29 +244,35 @@ public class DrawTouch : MonoBehaviour
 
         Debug.Log("Control POINTS COUNT: " + controlPoints.Count);
 
-        string[] hitNames = CheckRaycastHit(mousePosition);
+        RaycastHit2D[] hits;
+        bool hitPopCollider = CheckIfRaycastHitsCollider(mousePosition, "Pop Collider", out hits);
+        Debug.Log(hits.ToString());
 
-        if (impactType == ImpactType.Pop && hitNames.Any(name => name == "Pop Collider"))
+        if (impactType == ImpactType.Pop && hitPopCollider)
         {
             if (!hasControlPoint)
             {
                 AddControlPoint(mousePosition);
                 hasControlPoint = true;
+
+                middlePoint = Instantiate(pointPrefab, mousePosition, Quaternion.identity);
+
+                return;
             }
         }
 
-        // Set last control point
-        if (controlPoints.Count == 2)
-        {
+        if (hasControlPoint && controlPoints.Count == 2) {
             AddControlPoint(mousePosition);
+
+            return;
         }
 
         if (controlPoints.Count > 2)
         {
             controlPoints[2] = mousePosition;
-            springJoint.connectedBody.transform.position = controlPoints[2];
-            Debug.Log("YEBANIIII VROOOOOT " +  tensionPointPrefab.transform);
             UpdateMiddleControlPoint(mousePosition);
+            // springJoint.connectedBody.transform.position = controlPoints[1];
+            middlePoint.transform.position = controlPoints[1];
         }
     }
 
@@ -267,13 +282,8 @@ public class DrawTouch : MonoBehaviour
         // Middle point
         Vector2 p1 = controlPoints[1];
 
-        controlPoints[1] = CalculateMiddleControlPoint(p1, mousePosition);
+        controlPoints[1] = - new Vector2(mousePosition.x, mousePosition.y * 0.5f);
         Debug.DrawLine(p1, controlPoints[1], Color.red, 10f);
-    }
-
-    private Vector2 CalculateMiddleControlPoint(Vector2 p1, Vector2 p2)
-    {
-       return p2 - p1;
     }
 
     bool isMovedOutsideBounry(Vector2 mousePosition)

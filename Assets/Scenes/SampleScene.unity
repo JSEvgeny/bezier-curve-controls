@@ -332,6 +332,10 @@ PrefabInstance:
       value: Rear Leg
       objectReference: {fileID: 0}
     - target: {fileID: 3523168011098182491, guid: adc6806e85cdf080e87ef97581a935db, type: 3}
+      propertyPath: pointPrefab
+      value: 
+      objectReference: {fileID: 3255877891801309040, guid: bc937e022e7777aab9d6110c69ee1a94, type: 3}
+    - target: {fileID: 3523168011098182491, guid: adc6806e85cdf080e87ef97581a935db, type: 3}
       propertyPath: jointPointPrefab
       value: 
       objectReference: {fileID: 2727679745730661714, guid: f5f4bf0139366f445a9beae85a498107, type: 3}
