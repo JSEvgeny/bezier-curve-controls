@@ -18,6 +18,7 @@ public class DrawTouch : MonoBehaviour
     [SerializeField] GameObject tensionPointPrefab;
     [SerializeField] float jointMaxVerticalDistance = 5f;
     [SerializeField] Vector2 jointPoision = new Vector2(0, 0);
+    [SerializeField] GameObject skateboard;
 
     [ReadOnlyInspector] [SerializeField] List<Vector2> controlPoints = new List<Vector2>();
     [ReadOnlyInspector] [SerializeField] bool hasControlPoint = false;
@@ -28,7 +29,7 @@ public class DrawTouch : MonoBehaviour
     SpringJoint2D springJoint;
 
     GameObject middlePoint;
-
+    Vector2 springJointForce = new Vector2(0, 0);
 
     // Start is called before the first frame update
     void Start()
@@ -47,6 +48,7 @@ public class DrawTouch : MonoBehaviour
     {
         ResetControlPoints();
         SetStartingPoint();
+        springJointForce = springJoint.GetReactionForce(Time.deltaTime);
     }
 
 /*     void FixedUpdate() {
@@ -101,6 +103,8 @@ public class DrawTouch : MonoBehaviour
         ResetControlPoints();
         hasControlPoint = false;
         Destroy(middlePoint);
+        Debug.Log("FORCE: " + springJointForce);
+        skateboard.GetComponent<SkateboardController>().ApplyForces(springJointForce);
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -282,7 +286,7 @@ public class DrawTouch : MonoBehaviour
         // Middle point
         Vector2 p1 = controlPoints[1];
 
-        controlPoints[1] = - new Vector2(mousePosition.x, mousePosition.y * 0.5f);
+        controlPoints[1] = - new Vector2(mousePosition.x, (mousePosition.y + 2f ) * 0.5f);
         Debug.DrawLine(p1, controlPoints[1], Color.red, 10f);
     }
 
