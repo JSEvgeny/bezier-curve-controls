@@ -29,7 +29,7 @@ public class DrawTouch : MonoBehaviour
     SpringJoint2D springJoint;
 
     GameObject middlePoint;
-    Vector2 springJointForce = new Vector2(0, 0);
+    [SerializeField] Vector2 springJointForce = new Vector2(0, 0);
 
     // Start is called before the first frame update
     void Start()
@@ -48,7 +48,6 @@ public class DrawTouch : MonoBehaviour
     {
         ResetControlPoints();
         SetStartingPoint();
-        springJointForce = springJoint.GetReactionForce(Time.deltaTime);
     }
 
 /*     void FixedUpdate() {
@@ -93,6 +92,8 @@ public class DrawTouch : MonoBehaviour
         {
             RenderBezierCurve();
             springJoint.connectedBody.transform.position = controlPoints[1];
+            springJointForce = springJoint.connectedBody.velocity;
+            Debug.Log($"TORQUEEEEE, {springJoint.connectedBody.velocity}");
         }
     }
 
@@ -105,6 +106,7 @@ public class DrawTouch : MonoBehaviour
         Destroy(middlePoint);
         Debug.Log("FORCE: " + springJointForce);
         skateboard.GetComponent<SkateboardController>().ApplyForces(springJointForce);
+        springJointForce = new Vector2(0, 0);
     }
 
     void OnTriggerEnter2D(Collider2D other)

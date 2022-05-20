@@ -20,6 +20,10 @@ public class SkateboardController : MonoBehaviour
 
     public void ApplyForces(Vector2 force)
     {
-        rb.AddForce(force);
+        Vector2 forceToApply = new Vector2(0, force.x);
+
+        Debug.Log("Applying force: " + forceToApply);
+
+        rb.AddTorque(forceToApply);
     }
 }
